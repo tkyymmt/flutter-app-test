@@ -14,15 +14,15 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
+    return const MaterialApp(
+      /*
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'web-app-test Home Page'),
+      */
+      home: MyHomePage(title: 'web-app-test Home Page'),
     );
   }
 }
@@ -54,8 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-                'Welcome to web-app-test home page. To see or edit your profile, please login at',
+            const Text('To see or edit your profile, please login at',
                 style: TextStyle(fontSize: 18)),
             TextButton(
                 onPressed: _gotoLoginPage,
