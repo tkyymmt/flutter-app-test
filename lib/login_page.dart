@@ -10,10 +10,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPage extends State<LoginPage> {
-  bool _isObscure = true;
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,6 +31,7 @@ class _LoginPage extends State<LoginPage> {
     return null;
   }
 
+  final _emailController = TextEditingController();
   final _emailFormKey = GlobalKey<FormFieldState>();
   Widget _emailForm() {
     return SizedBox(
@@ -70,6 +67,8 @@ class _LoginPage extends State<LoginPage> {
     return null;
   }
 
+  bool _isObscure = true;
+  final _passwordController = TextEditingController();
   final _passwordFormKey = GlobalKey<FormFieldState>();
   Widget _passwordForm() {
     return SizedBox(
