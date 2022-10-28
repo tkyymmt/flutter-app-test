@@ -39,7 +39,6 @@ class _LoginPage extends State<LoginPage> {
         width: 400,
         child: TextFormField(
           key: _emailFormKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: _emailValidator,
           controller: _emailController,
           decoration: InputDecoration(
@@ -76,7 +75,6 @@ class _LoginPage extends State<LoginPage> {
         width: 400,
         child: TextFormField(
           key: _passwordFormKey,
-          autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: _passwordValidator,
           obscureText: _isObscure,
           controller: _passwordController,

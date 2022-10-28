@@ -1,29 +1,51 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class UserProfile {
-  final String name;
-  final String email;
-  UserProfile({required this.name, required this.email});
-}
-
 class UserDAO {
-  Future<UserProfile> getCurrentUser() async {
-    dynamic docSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .get();
-    UserProfile userProf = UserProfile(
-        name: docSnapshot?.get('name'), email: docSnapshot?.get('email'));
-    return userProf;
+  _UserProfile userProf = _UserProfile('', '');
+
+  Future<String> fetchUser() async {
+    try {
+      dynamic docRef = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .get();
+      userProf = _UserProfile(docRef?.get('name'), docRef?.get('email'));
+      return '';
+    } on FirebaseException catch (e) {
+      return e.code;
+    }
   }
 
-  void updateCurrentUser(String name, String email) async {
-    dynamic docSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .get();
-    docSnapshot?.update(name: name);
-    docSnapshot?.update(email: email);
+  Future<String> updateCurrentUser(String name) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .update({'name': name});
+      userProf.name = name;
+      //docRef?.update(email: email);
+      //_userProf.email = email;
+      return '';
+    } on FirebaseException catch (e) {
+      return e.code;
+    }
+  }
+}
+
+class _UserProfile {
+  String _name;
+  String _email;
+
+  _UserProfile(this._name, this._email);
+
+  String get name => _name;
+  set name(String name) {
+    _name = name;
+  }
+
+  String get email => _email;
+  set email(String email) {
+    _email = email;
   }
 }
