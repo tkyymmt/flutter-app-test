@@ -83,6 +83,35 @@ class _ProfileEditColumn extends StatefulWidget {
 class _ProfileEditColumnState extends State<_ProfileEditColumn> {
   String _nameStr = '';
   final _nameFormKey = GlobalKey<FormFieldState>();
+
+  String? _nameValidator(value) {
+    if (value == null || value.isEmpty) {
+      return "名前を入力してください";
+    }
+    _nameStr = value.toString();
+    return null;
+  }
+
+  _savePressed(context) async {
+    if (_nameFormKey.currentState!.validate()) {
+      if (_nameStr != _ProfilePage.dao.userProf.name) {
+        final String errMsg =
+            await _ProfilePage.dao.updateCurrentUserName(_nameStr);
+        if (errMsg.isEmpty) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('名前を変更しました')));
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content:
+                  Text(errMsg, style: const TextStyle(color: Colors.red))));
+        }
+      }
+      setState(() {
+        _ProfilePage.editMode = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(children: <Widget>[
@@ -91,13 +120,7 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
           width: 300,
           child: TextFormField(
             key: _nameFormKey,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return "名前を入力してください";
-              }
-              _nameStr = value.toString();
-              return null;
-            },
+            validator: (value) => _nameValidator(value),
             initialValue: _ProfilePage.dao.userProf.name,
             autofocus: true,
             style: const TextStyle(fontSize: 24),
@@ -124,25 +147,7 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
         SizedBox(
             height: 40,
             child: ElevatedButton(
-                onPressed: () async {
-                  if (_nameFormKey.currentState!.validate()) {
-                    if (_nameStr != _ProfilePage.dao.userProf.name) {
-                      final String errMsg =
-                          await _ProfilePage.dao.updateCurrentUser(_nameStr);
-                      if (errMsg.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('名前を変更しました')));
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(errMsg,
-                                style: const TextStyle(color: Colors.red))));
-                      }
-                    }
-                    setState(() {
-                      _ProfilePage.editMode = false;
-                    });
-                  }
-                },
+                onPressed: _savePressed(context),
                 child: const Text('Save', style: TextStyle(fontSize: 24)))),
         const Padding(padding: EdgeInsets.all(10)),
         SizedBox(

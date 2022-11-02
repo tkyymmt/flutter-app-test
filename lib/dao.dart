@@ -17,15 +17,13 @@ class UserDAO {
     }
   }
 
-  Future<String> updateCurrentUser(String name) async {
+  Future<String> updateCurrentUserName(String name) async {
     try {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(FirebaseAuth.instance.currentUser!.uid)
           .update({'name': name});
       userProf.name = name;
-      //docRef?.update(email: email);
-      //_userProf.email = email;
       return '';
     } on FirebaseException catch (e) {
       return e.code;
