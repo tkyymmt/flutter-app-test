@@ -45,7 +45,7 @@ class _EmailForm extends StatelessWidget {
           child: TextFormField(
             key: emailFormKey,
             controller: emailController,
-            validator: _emailValidator,
+            validator: (value) => _emailValidator(value),
             decoration: InputDecoration(
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -91,7 +91,7 @@ class _PasswordFormState extends State<_PasswordForm> {
         child: TextFormField(
           key: passwordFormKey,
           controller: passwordController,
-          validator: _passwordValidator,
+          validator: (value) => _passwordValidator(value),
           obscureText: _isObscure,
           decoration: InputDecoration(
             suffixIcon: IconButton(
@@ -123,33 +123,32 @@ class _PasswordFormState extends State<_PasswordForm> {
 }
 
 class _LoginButton extends StatelessWidget {
+  _loginButtonPressed(context) async {
+    if (_EmailForm.emailFormKey.currentState!.validate() &&
+        _PasswordFormState.passwordFormKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('処理中...')));
+
+      String errMsg = await authUser(
+          email: _EmailForm.emailController.text,
+          password: _PasswordFormState.passwordController.text);
+      ScaffoldMessenger.of(context).clearSnackBars();
+      if (errMsg.isEmpty) {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const ProfilePage()));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(errMsg, style: const TextStyle(color: Colors.red))));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 40,
       child: ElevatedButton(
-          onPressed: () async {
-            if (_EmailForm.emailFormKey.currentState!.validate() &&
-                _PasswordFormState.passwordFormKey.currentState!.validate()) {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text('処理中...')));
-
-              String errMsg = await authUser(
-                  email: _EmailForm.emailController.text,
-                  password: _PasswordFormState.passwordController.text);
-              ScaffoldMessenger.of(context).clearSnackBars();
-              if (errMsg.isEmpty) {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ProfilePage()));
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(errMsg,
-                        style: const TextStyle(color: Colors.red))));
-              }
-            }
-          },
+          onPressed: _loginButtonPressed(context),
           child: const Text(
             'ログイン',
             style: TextStyle(fontSize: 20),
