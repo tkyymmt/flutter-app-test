@@ -19,11 +19,16 @@ class _LoginPage extends State<LoginPage> {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[_emailForm(), _passwordForm(), _loginButton()],
+          children: <Widget>[_EmailForm(), _PasswordForm(), _LoginButton()],
         ),
       ),
     );
   }
+}
+
+class _EmailForm extends StatelessWidget {
+  static final emailController = TextEditingController();
+  static final emailFormKey = GlobalKey<FormFieldState>();
 
   String? _emailValidator(value) {
     if (value == null || value.isEmpty || !value.contains('@'))
@@ -31,53 +36,63 @@ class _LoginPage extends State<LoginPage> {
     return null;
   }
 
-  final _emailController = TextEditingController();
-  final _emailFormKey = GlobalKey<FormFieldState>();
-  Widget _emailForm() {
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
         height: 80,
         width: 400,
-        child: TextFormField(
-          key: _emailFormKey,
-          validator: _emailValidator,
-          controller: _emailController,
-          decoration: InputDecoration(
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: Colors.blue,
-                width: 2.0,
+        child: SizedBox(
+          child: TextFormField(
+            key: emailFormKey,
+            controller: emailController,
+            validator: _emailValidator,
+            decoration: InputDecoration(
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: Colors.blue,
+                  width: 2.0,
+                ),
               ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: Colors.blue,
-                width: 2.0,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(
+                  color: Colors.blue,
+                  width: 2.0,
+                ),
               ),
+              labelText: 'メールアドレス',
             ),
-            labelText: 'メールアドレス',
           ),
         ));
   }
+}
+
+class _PasswordForm extends StatefulWidget {
+  @override
+  State<_PasswordForm> createState() => _PasswordFormState();
+}
+
+class _PasswordFormState extends State<_PasswordForm> {
+  static final passwordController = TextEditingController();
+  static final passwordFormKey = GlobalKey<FormFieldState>();
+  bool _isObscure = true;
 
   String? _passwordValidator(value) {
     if (value == null || value.length < 8) return 'パスワードは8文字以上で入力してください';
     return null;
   }
 
-  bool _isObscure = true;
-  final _passwordController = TextEditingController();
-  final _passwordFormKey = GlobalKey<FormFieldState>();
-  Widget _passwordForm() {
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
         height: 80,
         width: 400,
         child: TextFormField(
-          key: _passwordFormKey,
+          key: passwordFormKey,
+          controller: passwordController,
           validator: _passwordValidator,
           obscureText: _isObscure,
-          controller: _passwordController,
           decoration: InputDecoration(
             suffixIcon: IconButton(
               icon: Icon(_isObscure ? Icons.visibility_off : Icons.visibility),
@@ -105,20 +120,23 @@ class _LoginPage extends State<LoginPage> {
           ),
         ));
   }
+}
 
-  Widget _loginButton() {
+class _LoginButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return SizedBox(
       height: 40,
       child: ElevatedButton(
           onPressed: () async {
-            if (_emailFormKey.currentState!.validate() &&
-                _passwordFormKey.currentState!.validate()) {
+            if (_EmailForm.emailFormKey.currentState!.validate() &&
+                _PasswordFormState.passwordFormKey.currentState!.validate()) {
               ScaffoldMessenger.of(context)
                   .showSnackBar(const SnackBar(content: Text('処理中...')));
 
               String errMsg = await authUser(
-                  email: _emailController.text,
-                  password: _passwordController.text);
+                  email: _EmailForm.emailController.text,
+                  password: _PasswordFormState.passwordController.text);
               ScaffoldMessenger.of(context).clearSnackBars();
               if (errMsg.isEmpty) {
                 Navigator.push(

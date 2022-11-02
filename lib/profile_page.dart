@@ -9,8 +9,8 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePage extends State<ProfilePage> {
-  UserDAO dao = UserDAO();
-  bool _editMode = false;
+  static UserDAO dao = UserDAO();
+  static bool editMode = false;
 
   void _initDAO() async {
     final String errMsg = await dao.fetchUser();
@@ -40,17 +40,26 @@ class _ProfilePage extends State<ProfilePage> {
               const Padding(padding: EdgeInsets.all(20)),
               Text(dao.userProf.email,
                   style: const TextStyle(fontSize: 24, height: 2)),
-              if (!_editMode) ...[
-                _profileColumn()
+              if (!editMode) ...[
+                _ProfileColumn()
               ] else ...[
-                _profileEditColumn()
+                _ProfileEditColumn()
               ],
             ]))));
   }
+}
 
-  Widget _profileColumn() {
+class _ProfileColumn extends StatefulWidget {
+  @override
+  State<_ProfileColumn> createState() => _ProfileColumnState();
+}
+
+class _ProfileColumnState extends State<_ProfileColumn> {
+  @override
+  Widget build(BuildContext context) {
     return Column(children: <Widget>[
-      Text(dao.userProf.name, style: const TextStyle(fontSize: 24, height: 2)),
+      Text(_ProfilePage.dao.userProf.name,
+          style: const TextStyle(fontSize: 24, height: 2)),
       const Padding(padding: EdgeInsets.all(10)),
       SizedBox(
           width: 200,
@@ -58,16 +67,24 @@ class _ProfilePage extends State<ProfilePage> {
           child: ElevatedButton(
               onPressed: () {
                 setState(() {
-                  _editMode = true;
+                  _ProfilePage.editMode = true;
                 });
               },
               child: const Text('Edit', style: TextStyle(fontSize: 24))))
     ]);
   }
+}
 
+class _ProfileEditColumn extends StatefulWidget {
+  @override
+  State<_ProfileEditColumn> createState() => _ProfileEditColumnState();
+}
+
+class _ProfileEditColumnState extends State<_ProfileEditColumn> {
   String _nameStr = '';
   final _nameFormKey = GlobalKey<FormFieldState>();
-  Widget _profileEditColumn() {
+  @override
+  Widget build(BuildContext context) {
     return Column(children: <Widget>[
       SizedBox(
           height: 50,
@@ -81,7 +98,7 @@ class _ProfilePage extends State<ProfilePage> {
               _nameStr = value.toString();
               return null;
             },
-            initialValue: dao.userProf.name,
+            initialValue: _ProfilePage.dao.userProf.name,
             autofocus: true,
             style: const TextStyle(fontSize: 24),
             decoration: InputDecoration(
@@ -109,9 +126,9 @@ class _ProfilePage extends State<ProfilePage> {
             child: ElevatedButton(
                 onPressed: () async {
                   if (_nameFormKey.currentState!.validate()) {
-                    if (_nameStr != dao.userProf.name) {
+                    if (_nameStr != _ProfilePage.dao.userProf.name) {
                       final String errMsg =
-                          await dao.updateCurrentUser(_nameStr);
+                          await _ProfilePage.dao.updateCurrentUser(_nameStr);
                       if (errMsg.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('名前を変更しました')));
@@ -122,7 +139,7 @@ class _ProfilePage extends State<ProfilePage> {
                       }
                     }
                     setState(() {
-                      _editMode = false;
+                      _ProfilePage.editMode = false;
                     });
                   }
                 },
@@ -134,7 +151,7 @@ class _ProfilePage extends State<ProfilePage> {
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
                 onPressed: () {
                   setState(() {
-                    _editMode = false;
+                    _ProfilePage.editMode = false;
                   });
                 },
                 child: const Text('Cancel', style: TextStyle(fontSize: 24))))
