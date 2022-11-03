@@ -123,7 +123,7 @@ class _PasswordFormState extends State<_PasswordForm> {
 }
 
 class _LoginButton extends StatelessWidget {
-  _loginButtonPressed(context) async {
+  void _loginButtonPressed(context) async {
     if (_EmailForm.emailFormKey.currentState!.validate() &&
         _PasswordFormState.passwordFormKey.currentState!.validate()) {
       ScaffoldMessenger.of(context)
@@ -148,7 +148,7 @@ class _LoginButton extends StatelessWidget {
     return SizedBox(
       height: 40,
       child: ElevatedButton(
-          onPressed: _loginButtonPressed(context),
+          onPressed: () => _loginButtonPressed(context),
           child: const Text(
             'ログイン',
             style: TextStyle(fontSize: 20),

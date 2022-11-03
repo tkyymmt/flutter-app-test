@@ -92,7 +92,7 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
     return null;
   }
 
-  _savePressed(context) async {
+  void _savePressed(context) async {
     if (_nameFormKey.currentState!.validate()) {
       if (_nameStr != _ProfilePage.dao.userProf.name) {
         final String errMsg =
@@ -147,7 +147,7 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
         SizedBox(
             height: 40,
             child: ElevatedButton(
-                onPressed: _savePressed(context),
+                onPressed: () => _savePressed(context),
                 child: const Text('Save', style: TextStyle(fontSize: 24)))),
         const Padding(padding: EdgeInsets.all(10)),
         SizedBox(
