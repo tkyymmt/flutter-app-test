@@ -1,3 +1,4 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:test/auth.dart';
 import 'package:test/profile_page.dart';
@@ -31,7 +32,7 @@ class _EmailForm extends StatelessWidget {
   static final emailFormKey = GlobalKey<FormFieldState>();
 
   String? _emailValidator(value) {
-    if (value == null || value.isEmpty || !value.contains('@'))
+    if (value == null || value.isEmpty || !EmailValidator.validate(value))
       return 'メールアドレスを入力してください';
     return null;
   }

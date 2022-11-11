@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:test/dao.dart';
+import 'package:test/user_profile.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -9,21 +10,30 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePage extends State<ProfilePage> {
-  static UserDAO dao = UserDAO();
+  UserProfile? userProf;
   static bool editMode = false;
 
-  void _initDAO() async {
-    final String errMsg = await dao.fetchUser();
-    if (errMsg.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(errMsg, style: const TextStyle(color: Colors.red))));
+  void _initUserProf() async {
+    UserDAO dao = UserDAO();
+    userProf = await dao.fetchUser();
+    if (userProf == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('could not fetch your profile',
+              style: TextStyle(color: Colors.red))));
     }
     if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    _initDAO();
+    _initUserProf();
+
+    // display progress indicator while fetching user profile info
+    if (userProf == null) {
+      return Scaffold(
+          appBar: AppBar(title: const Text('Profile Page')),
+          body: const LinearProgressIndicator());
+    }
 
     return Scaffold(
         appBar: AppBar(title: const Text('Profile Page')),
@@ -38,18 +48,22 @@ class _ProfilePage extends State<ProfilePage> {
                 child: Icon(Icons.person, size: 130),
               ),
               const Padding(padding: EdgeInsets.all(20)),
-              Text(dao.userProf.email,
+              Text(userProf!.email,
                   style: const TextStyle(fontSize: 24, height: 2)),
               if (!editMode) ...[
-                _ProfileColumn()
+                _ProfileColumn(prof: userProf!)
               ] else ...[
-                _ProfileEditColumn()
+                _ProfileEditColumn(prof: userProf!)
               ],
             ]))));
   }
 }
 
 class _ProfileColumn extends StatefulWidget {
+  const _ProfileColumn({required this.prof});
+
+  final UserProfile prof;
+
   @override
   State<_ProfileColumn> createState() => _ProfileColumnState();
 }
@@ -58,24 +72,24 @@ class _ProfileColumnState extends State<_ProfileColumn> {
   @override
   Widget build(BuildContext context) {
     return Column(children: <Widget>[
-      Text(_ProfilePage.dao.userProf.name,
-          style: const TextStyle(fontSize: 24, height: 2)),
+      Text(widget.prof.name, style: const TextStyle(fontSize: 24, height: 2)),
       const Padding(padding: EdgeInsets.all(10)),
       SizedBox(
           width: 200,
           height: 40,
           child: ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _ProfilePage.editMode = true;
-                });
-              },
+              onPressed: () => setState(
+                  () => _ProfilePage.editMode = !_ProfilePage.editMode),
               child: const Text('Edit', style: TextStyle(fontSize: 24))))
     ]);
   }
 }
 
 class _ProfileEditColumn extends StatefulWidget {
+  const _ProfileEditColumn({required this.prof});
+
+  final UserProfile prof;
+
   @override
   State<_ProfileEditColumn> createState() => _ProfileEditColumnState();
 }
@@ -94,10 +108,11 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
 
   void _savePressed(context) async {
     if (_nameFormKey.currentState!.validate()) {
-      if (_nameStr != _ProfilePage.dao.userProf.name) {
-        final String errMsg =
-            await _ProfilePage.dao.updateCurrentUserName(_nameStr);
+      if (_nameStr != widget.prof.name) {
+        UserDAO dao = UserDAO();
+        final String errMsg = await dao.updateCurrentUserName(_nameStr);
         if (errMsg.isEmpty) {
+          widget.prof.name = _nameStr;
           ScaffoldMessenger.of(context)
               .showSnackBar(const SnackBar(content: Text('名前を変更しました')));
         } else {
@@ -106,10 +121,8 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
                   Text(errMsg, style: const TextStyle(color: Colors.red))));
         }
       }
-      setState(() {
-        _ProfilePage.editMode = false;
-      });
     }
+    setState(() => _ProfilePage.editMode = !_ProfilePage.editMode);
   }
 
   @override
@@ -121,7 +134,7 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
           child: TextFormField(
             key: _nameFormKey,
             validator: (value) => _nameValidator(value),
-            initialValue: _ProfilePage.dao.userProf.name,
+            initialValue: widget.prof.name,
             autofocus: true,
             style: const TextStyle(fontSize: 24),
             decoration: InputDecoration(
@@ -154,11 +167,8 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
             height: 40,
             child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
-                onPressed: () {
-                  setState(() {
-                    _ProfilePage.editMode = false;
-                  });
-                },
+                onPressed: () => setState(
+                    () => _ProfilePage.editMode = !_ProfilePage.editMode),
                 child: const Text('Cancel', style: TextStyle(fontSize: 24))))
       ])
     ]);
