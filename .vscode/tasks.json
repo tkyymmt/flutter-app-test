@@ -16,6 +16,7 @@
         {
             "label": "Run",
             "type": "shell",
+            // fluttercors --disable ; fluttercors --enable
             "command": "firebase emulators:start --import ./emulators_data --export-on-exit & flutter run -d chrome --dart-define=USE_FIREBASE_EMU=true ; pgrep -P $! | xargs kill ; wait $!",
             "dependsOn": "Test",
             "problemMatcher": [],

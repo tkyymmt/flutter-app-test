@@ -1,100 +1,104 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:test/auth.dart';
 import 'package:test/dao.dart';
+import 'package:test/login_page.dart';
 import 'package:test/user_profile.dart';
 
-class ProfilePage extends StatefulWidget {
+final editModeProvider = StateProvider((_) => false);
+
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePage();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userProf = ref.watch(userProfileProvider);
+    final editMode = ref.watch(editModeProvider);
 
-class _ProfilePage extends State<ProfilePage> {
-  UserProfile? userProf;
-  static bool editMode = false;
-
-  void _initUserProf() async {
-    UserDAO dao = UserDAO();
-    userProf = await dao.fetchUser();
-    if (userProf == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('could not fetch your profile',
-              style: TextStyle(color: Colors.red))));
-    }
-    if (mounted) setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    _initUserProf();
-
-    // display progress indicator while fetching user profile info
-    if (userProf == null) {
-      return Scaffold(
-          appBar: AppBar(title: const Text('Profile Page')),
-          body: const LinearProgressIndicator());
-    }
-
+    /*
     return Scaffold(
         appBar: AppBar(title: const Text('Profile Page')),
-        body: SingleChildScrollView(
-            child: Center(
-                child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-              const Padding(padding: EdgeInsets.all(20)),
-              const CircleAvatar(
-                radius: 100,
-                child: Icon(Icons.person, size: 130),
-              ),
-              const Padding(padding: EdgeInsets.all(20)),
-              Text(userProf!.email,
-                  style: const TextStyle(fontSize: 24, height: 2)),
-              if (!editMode) ...[
-                _ProfileColumn(prof: userProf!)
-              ] else ...[
-                _ProfileEditColumn(prof: userProf!)
-              ],
-            ]))));
+        body: userProf.when(
+            data: ((data) {
+              return SingleChildScrollView(
+                  child: Center(
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                    const Padding(padding: EdgeInsets.all(20)),
+                    const CircleAvatar(
+                      radius: 100,
+                      child: Icon(Icons.person, size: 130),
+                    ),
+                    const Padding(padding: EdgeInsets.all(20)),
+                    Text(data!.email,
+                        key: const ValueKey('emailKey'),
+                        style: const TextStyle(fontSize: 24, height: 2)),
+                    if (!editMode) ...[
+                      _ProfileColumn(),
+                const Padding(padding: EdgeInsets.all(20)),
+                      _LogoutButton()
+                    ] else ...[
+                      //_ProfileEditColumn()
+                    ]
+                  ])));
+            }),
+            error: ((error, stackTrace) => Text(
+                  error.toString(),
+                  style: const TextStyle(color: Colors.red),
+                )),
+            loading: (() => const LinearProgressIndicator())));
+            */
+    return Scaffold(
+        appBar: AppBar(title: const Text('Profile Page')),
+        body: userProf == null
+            ? const LinearProgressIndicator()
+            : SingleChildScrollView(
+                child: Center(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                    const Padding(padding: EdgeInsets.all(20)),
+                    const CircleAvatar(
+                      radius: 100,
+                      child: Icon(Icons.person, size: 130),
+                    ),
+                    const Padding(padding: EdgeInsets.all(20)),
+                    Text(userProf.email,
+                        key: const ValueKey('emailKey'),
+                        style: const TextStyle(fontSize: 24, height: 2)),
+                    if (!editMode) ...[
+                      _ProfileColumn(),
+                      const Padding(padding: EdgeInsets.all(20)),
+                      _LogoutButton()
+                    ] else ...[
+                      _ProfileEditColumn()
+                    ],
+                  ]))));
   }
 }
 
-class _ProfileColumn extends StatefulWidget {
-  const _ProfileColumn({required this.prof});
-
-  final UserProfile prof;
-
+class _ProfileColumn extends ConsumerWidget {
   @override
-  State<_ProfileColumn> createState() => _ProfileColumnState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userProf = ref.watch(userProfileProvider);
+    final editMode = ref.watch(editModeProvider.notifier);
 
-class _ProfileColumnState extends State<_ProfileColumn> {
-  @override
-  Widget build(BuildContext context) {
     return Column(children: <Widget>[
-      Text(widget.prof.name, style: const TextStyle(fontSize: 24, height: 2)),
+      Text(userProf!.name, style: const TextStyle(fontSize: 24, height: 2)),
       const Padding(padding: EdgeInsets.all(10)),
       SizedBox(
           width: 200,
           height: 40,
           child: ElevatedButton(
-              onPressed: () => setState(
-                  () => _ProfilePage.editMode = !_ProfilePage.editMode),
+              onPressed: () => editMode.state = !editMode.state,
               child: const Text('Edit', style: TextStyle(fontSize: 24))))
     ]);
   }
 }
 
-class _ProfileEditColumn extends StatefulWidget {
-  const _ProfileEditColumn({required this.prof});
-
-  final UserProfile prof;
-
-  @override
-  State<_ProfileEditColumn> createState() => _ProfileEditColumnState();
-}
-
-class _ProfileEditColumnState extends State<_ProfileEditColumn> {
+class _ProfileEditColumn extends ConsumerWidget {
   String _nameStr = '';
   final _nameFormKey = GlobalKey<FormFieldState>();
 
@@ -106,13 +110,16 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
     return null;
   }
 
-  void _savePressed(context) async {
+  void _savePressed(BuildContext context, WidgetRef ref) async {
+    final userProf = ref.watch(userProfileProvider);
+
     if (_nameFormKey.currentState!.validate()) {
-      if (_nameStr != widget.prof.name) {
-        UserDAO dao = UserDAO();
+      if (_nameStr != userProf!.name) {
+        final dao = ref.read(userDAOProvider);
         final String errMsg = await dao.updateCurrentUserName(_nameStr);
         if (errMsg.isEmpty) {
-          widget.prof.name = _nameStr;
+          ref.read(userProfileProvider.notifier).state =
+              UserProfile(_nameStr, userProf.email);
           ScaffoldMessenger.of(context)
               .showSnackBar(const SnackBar(content: Text('名前を変更しました')));
         } else {
@@ -122,11 +129,13 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
         }
       }
     }
-    setState(() => _ProfilePage.editMode = !_ProfilePage.editMode);
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userProf = ref.watch(userProfileProvider);
+    final editMode = ref.watch(editModeProvider.notifier);
+
     return Column(children: <Widget>[
       SizedBox(
           height: 50,
@@ -134,7 +143,7 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
           child: TextFormField(
             key: _nameFormKey,
             validator: (value) => _nameValidator(value),
-            initialValue: widget.prof.name,
+            initialValue: userProf!.name,
             autofocus: true,
             style: const TextStyle(fontSize: 24),
             decoration: InputDecoration(
@@ -160,17 +169,40 @@ class _ProfileEditColumnState extends State<_ProfileEditColumn> {
         SizedBox(
             height: 40,
             child: ElevatedButton(
-                onPressed: () => _savePressed(context),
+                onPressed: () {
+                  _savePressed(context, ref);
+                  editMode.state = !editMode.state;
+                },
                 child: const Text('Save', style: TextStyle(fontSize: 24)))),
         const Padding(padding: EdgeInsets.all(10)),
         SizedBox(
             height: 40,
             child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.grey),
-                onPressed: () => setState(
-                    () => _ProfilePage.editMode = !_ProfilePage.editMode),
+                onPressed: () => editMode.state = !editMode.state,
                 child: const Text('Cancel', style: TextStyle(fontSize: 24))))
       ])
     ]);
+  }
+}
+
+class _LogoutButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+        width: 200,
+        height: 40,
+        child: ElevatedButton(
+            onPressed: () async {
+              String errMsg = await signOutUser();
+              if (errMsg.isEmpty) {
+                context.go('/login');
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(errMsg,
+                        style: const TextStyle(color: Colors.red))));
+              }
+            },
+            child: const Text('ログアウト', style: TextStyle(fontSize: 24))));
   }
 }

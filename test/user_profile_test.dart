@@ -2,7 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:test/user_profile.dart';
 
 void main() {
-  test('UserProfile constructor, getter and setter should be work correctlly',
+  test(
+      '[UserProfile] constructor, getter and setter should be working correctly',
       () {
     UserProfile userProf = UserProfile('', '');
 

@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 // dispatch error message to discord channel
-// App --> Cloud Functions --> Discord Channel
+// This App --> Cloud Functions --> Discord Channel
 class ErrorDispatcher {
   static dispatch(String errMsg) async {
     const url =

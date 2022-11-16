@@ -1,6 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:test/error_dispatcher.dart';
 import 'package:test/user_profile.dart';
+
+final userDAOProvider = Provider((ref) => UserDAO());
 
 class UserDAO {
   Future<UserProfile?> fetchUser() async {
@@ -9,11 +13,12 @@ class UserDAO {
           .collection('users')
           .doc(FirebaseAuth.instance.currentUser!.uid)
           .get();
-      String name = docRef?.get('name');
-      String email = docRef?.get('email');
+      String name = docRef.get('name');
+      String email = docRef.get('email');
+
       return UserProfile(name, email);
     } catch (e) {
-      // do something with [e]
+      //ErrorDispatcher.dispatch(e.toString());
       return null;
     }
   }
@@ -26,6 +31,7 @@ class UserDAO {
           .update({'name': name});
       return '';
     } on FirebaseException catch (e) {
+      //ErrorDispatcher.dispatch(e.toString());
       return e.code;
     }
   }
