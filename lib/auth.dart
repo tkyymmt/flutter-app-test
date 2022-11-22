@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'error_dispatcher.dart';
@@ -9,7 +10,6 @@ Future<String> signInUser(
         .signInWithEmailAndPassword(email: email, password: password);
     return '';
   } on FirebaseAuthException catch (e) {
-    //ErrorDispatcher.dispatch(e.toString());
     return e.code;
   }
 }
@@ -19,7 +19,20 @@ Future<String> signOutUser() async {
     await FirebaseAuth.instance.signOut();
     return '';
   } on FirebaseAuthException catch (e) {
-    //ErrorDispatcher.dispatch(e.toString());
+    ErrorDispatcher.dispatch(e.code);
     return e.code;
+  }
+}
+
+// returns true if /admins/{uid} exists in firestore
+Future<bool> isMeAdmin() async {
+  try {
+    final docRef = await FirebaseFirestore.instance
+        .collection('admins')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .get();
+    return true;
+  } on FirebaseException catch (e) {
+    return false;
   }
 }

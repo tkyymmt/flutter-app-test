@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -71,7 +72,7 @@ class _PasswordForm extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final passwordFormKey = ref.watch(_passwordFormKeyProvider);
     final passwordController = ref.watch(_passwordControllerProvider);
-    bool isObscure = ref.watch(_isObscureProvider.notifier).state;
+    final isObscure = ref.watch(_isObscureProvider.notifier);
     return SizedBox(
         height: 80,
         width: 400,
@@ -79,11 +80,12 @@ class _PasswordForm extends ConsumerWidget {
           key: passwordFormKey,
           controller: passwordController,
           validator: (value) => validatePassword(value),
-          obscureText: isObscure,
+          obscureText: isObscure.state,
           decoration: InputDecoration(
             suffixIcon: IconButton(
-              icon: Icon(isObscure ? Icons.visibility_off : Icons.visibility),
-              onPressed: () => isObscure = !isObscure,
+              icon: Icon(
+                  isObscure.state ? Icons.visibility_off : Icons.visibility),
+              onPressed: () => isObscure.state = !isObscure.state,
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -135,7 +137,13 @@ class _LoginButton extends ConsumerWidget {
       if (errMsg.isEmpty) {
         emailController.clear();
         passwordController.clear();
-        context.go('/profile');
+
+        bool isMe = await isMeAdmin();
+        if (isMe) {
+          context.go('/admin');
+        } else {
+          context.go('/profile');
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(errMsg, style: const TextStyle(color: Colors.red))));

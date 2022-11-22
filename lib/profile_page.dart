@@ -14,6 +14,8 @@ class ProfilePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userProf = ref.watch(userProfileProvider);
+
+    final profImg = ref.watch(profImgProvider);
     final editMode = ref.watch(editModeProvider);
 
     /*
@@ -60,10 +62,7 @@ class ProfilePage extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                     const Padding(padding: EdgeInsets.all(20)),
-                    const CircleAvatar(
-                      radius: 100,
-                      child: Icon(Icons.person, size: 130),
-                    ),
+                    CircleAvatar(child: profImg.value, radius: 100),
                     const Padding(padding: EdgeInsets.all(20)),
                     Text(userProf.email,
                         key: const ValueKey('emailKey'),
@@ -119,7 +118,7 @@ class _ProfileEditColumn extends ConsumerWidget {
         final String errMsg = await dao.updateCurrentUserName(_nameStr);
         if (errMsg.isEmpty) {
           ref.read(userProfileProvider.notifier).state =
-              UserProfile(_nameStr, userProf.email);
+              UserProfile(_nameStr, userProf.email, userProf.imgURL);
           ScaffoldMessenger.of(context)
               .showSnackBar(const SnackBar(content: Text('名前を変更しました')));
         } else {

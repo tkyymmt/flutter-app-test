@@ -49,3 +49,7 @@ app.*.map.json
 /linux
 /macos
 /windows
+
+storage.rules
+firestore.rules
+firestore.indexes.json
