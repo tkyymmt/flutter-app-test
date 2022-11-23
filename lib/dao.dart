@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:test/error_dispatcher.dart';
 import 'package:test/user_profile.dart';
@@ -8,7 +9,7 @@ import 'package:test/user_profile.dart';
 final userDAOProvider = Provider((ref) => UserDAO());
 
 class UserDAO {
-  static Future<String> getProfImgURL() async {
+  Future<String> _getProfImgURL() async {
     try {
       const String img = 'prof_img.png';
       final String uid = FirebaseAuth.instance.currentUser!.uid;
@@ -32,12 +33,13 @@ class UserDAO {
       String name = docRef.get('name');
       String email = docRef.get('email');
 
-      final String imgURL = await getProfImgURL();
+      final String imgURL = await _getProfImgURL();
+      final Image img = Image.network(imgURL);
 
       return UserProfile(
         name,
         email,
-        imgURL,
+        img,
       );
     } on FirebaseException catch (e) {
       ErrorDispatcher.dispatch(e.code);

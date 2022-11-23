@@ -27,12 +27,12 @@ Future<String> signOutUser() async {
 // returns true if /admins/{uid} exists in firestore
 Future<bool> isMeAdmin() async {
   try {
-    final docRef = await FirebaseFirestore.instance
+    await FirebaseFirestore.instance
         .collection('admins')
         .doc(FirebaseAuth.instance.currentUser!.uid)
         .get();
     return true;
-  } on FirebaseException catch (e) {
+  } on FirebaseException {
     return false;
   }
 }
