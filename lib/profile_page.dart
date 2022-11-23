@@ -3,58 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:test/auth.dart';
 import 'package:test/dao.dart';
-import 'package:test/login_page.dart';
 import 'package:test/user_profile.dart';
 
-final editModeProvider = StateProvider((_) => false);
+final _editModeProvider = StateProvider((_) => false);
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userProf = ref.watch(userProfileProvider);
+    final editMode = ref.watch(_editModeProvider);
+    final name = ref.watch(userNameProvider);
+    final email = ref.watch(userEmailProvider);
+    final img = ref.watch(userImageProvider);
 
-    final profImg = ref.watch(profImgProvider);
-    final editMode = ref.watch(editModeProvider);
-
-    /*
     return Scaffold(
         appBar: AppBar(title: const Text('Profile Page')),
-        body: userProf.when(
-            data: ((data) {
-              return SingleChildScrollView(
-                  child: Center(
-                      child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                    const Padding(padding: EdgeInsets.all(20)),
-                    const CircleAvatar(
-                      radius: 100,
-                      child: Icon(Icons.person, size: 130),
-                    ),
-                    const Padding(padding: EdgeInsets.all(20)),
-                    Text(data!.email,
-                        key: const ValueKey('emailKey'),
-                        style: const TextStyle(fontSize: 24, height: 2)),
-                    if (!editMode) ...[
-                      _ProfileColumn(),
-                const Padding(padding: EdgeInsets.all(20)),
-                      _LogoutButton()
-                    ] else ...[
-                      //_ProfileEditColumn()
-                    ]
-                  ])));
-            }),
-            error: ((error, stackTrace) => Text(
-                  error.toString(),
-                  style: const TextStyle(color: Colors.red),
-                )),
-            loading: (() => const LinearProgressIndicator())));
-            */
-    return Scaffold(
-        appBar: AppBar(title: const Text('Profile Page')),
-        body: userProf == null
+        body: name == null || email == null || img == null
             ? const LinearProgressIndicator()
             : SingleChildScrollView(
                 child: Center(
@@ -62,9 +27,9 @@ class ProfilePage extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                     const Padding(padding: EdgeInsets.all(20)),
-                    CircleAvatar(child: profImg.value, radius: 100),
+                    CircleAvatar(radius: 100, child: img),
                     const Padding(padding: EdgeInsets.all(20)),
-                    Text(userProf.email,
+                    Text(email,
                         key: const ValueKey('emailKey'),
                         style: const TextStyle(fontSize: 24, height: 2)),
                     if (!editMode) ...[
@@ -81,11 +46,11 @@ class ProfilePage extends ConsumerWidget {
 class _ProfileColumn extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userProf = ref.watch(userProfileProvider);
-    final editMode = ref.watch(editModeProvider.notifier);
+    final editMode = ref.watch(_editModeProvider.notifier);
+    final name = ref.watch(userNameProvider);
 
     return Column(children: <Widget>[
-      Text(userProf!.name, style: const TextStyle(fontSize: 24, height: 2)),
+      Text(name!, style: const TextStyle(fontSize: 24, height: 2)),
       const Padding(padding: EdgeInsets.all(10)),
       SizedBox(
           width: 200,
@@ -98,29 +63,30 @@ class _ProfileColumn extends ConsumerWidget {
 }
 
 class _ProfileEditColumn extends ConsumerWidget {
-  String _nameStr = '';
+  final _nameCtrl = TextEditingController();
   final _nameFormKey = GlobalKey<FormFieldState>();
 
   String? _nameValidator(value) {
     if (value == null || value.isEmpty) {
       return "名前を入力してください";
     }
-    _nameStr = value.toString();
     return null;
   }
 
   void _savePressed(BuildContext context, WidgetRef ref) async {
-    final userProf = ref.watch(userProfileProvider);
+    final name = ref.watch(userNameProvider);
 
     if (_nameFormKey.currentState!.validate()) {
-      if (_nameStr != userProf!.name) {
+      if (_nameCtrl.text != name!) {
         final dao = ref.read(userDAOProvider);
-        final String errMsg = await dao.updateCurrentUserName(_nameStr);
+        final String errMsg = await dao.updateCurrentUserName(_nameCtrl.text);
         if (errMsg.isEmpty) {
-          ref.read(userProfileProvider.notifier).state =
-              UserProfile(_nameStr, userProf.email, userProf.imgURL);
+          ref.watch(userNameProvider.notifier).state = _nameCtrl.text;
+          /*
+          // this causes Error: Looking up a deactivated widget's ancestor is unsafe.
           ScaffoldMessenger.of(context)
               .showSnackBar(const SnackBar(content: Text('名前を変更しました')));
+              */
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
               content:
@@ -132,8 +98,9 @@ class _ProfileEditColumn extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userProf = ref.watch(userProfileProvider);
-    final editMode = ref.watch(editModeProvider.notifier);
+    final editMode = ref.watch(_editModeProvider.notifier);
+    final name = ref.watch(userNameProvider);
+    _nameCtrl.text = name!;
 
     return Column(children: <Widget>[
       SizedBox(
@@ -142,7 +109,7 @@ class _ProfileEditColumn extends ConsumerWidget {
           child: TextFormField(
             key: _nameFormKey,
             validator: (value) => _nameValidator(value),
-            initialValue: userProf!.name,
+            controller: _nameCtrl,
             autofocus: true,
             style: const TextStyle(fontSize: 24),
             decoration: InputDecoration(

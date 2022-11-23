@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:test/user_profile.dart' show UserProfile;
 
@@ -5,22 +6,21 @@ void main() {
   test(
       '[UserProfile] constructor, getter and setter should be working correctly',
       () {
-    UserProfile userProf = UserProfile('', '', '');
+    Image img = Image.network(
+        'https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg');
+    UserProfile userProf = UserProfile('', '', img);
 
     expect(userProf.name, '');
     expect(userProf.email, '');
-    expect(userProf.imgURL, '');
+    expect(userProf.img, img);
 
     String name = 'takkun';
     String email = 't@takkun.com';
-    String imgURL = 'users/prof_img.png';
+    img = Image.network(
+        'https://flutter.github.io/assets-for-api-docs/assets/widgets/owl-2.jpg');
 
     userProf.name = name;
-    userProf.email = email;
-    userProf.imgURL = imgURL;
 
     expect(userProf.name, name);
-    expect(userProf.email, email);
-    expect(userProf.imgURL, imgURL);
   });
 }
