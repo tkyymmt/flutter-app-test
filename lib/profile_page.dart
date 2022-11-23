@@ -81,6 +81,7 @@ class _ProfileEditColumn extends ConsumerWidget {
         final dao = ref.read(userDAOProvider);
         final String errMsg = await dao.updateCurrentUserName(_nameCtrl.text);
         if (errMsg.isEmpty) {
+          // このコード実行後に別アカウントにログインしても前のユーザー情報が表示される
           ref.watch(userNameProvider.notifier).state = _nameCtrl.text;
           /*
           // this causes Error: Looking up a deactivated widget's ancestor is unsafe.
