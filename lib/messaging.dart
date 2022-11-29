@@ -7,10 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'error_dispatcher.dart';
 
 const _vapidKey =
-    'BBHLCbsJtWdHPPzN6iaSFJ0KbfREykxVrK8fWYpT9iKtj6zoQN6XKvFmdJfUr8MIQtMHVKk9OTdxXW5IRTF8PhE';
+    'BMjARaJBDRi5AKSoahTop7jGW5kFUKGbEcInKqIoituRBGa68Y6D5HMHhRGMQddenQjEz-TGccY1m8wlxVRxgdg';
 String? _token;
-final countProvider = StateProvider(((ref) => 0));
-//final uidCountProvider = StateProvider<Map<String, int>>(((ref) => {}));
+final uidCountProvider = StateProvider<Map<String, int>>(((ref) => {}));
 
 Future<void> setupMessaging(WidgetRef ref) async {
   try {
@@ -19,22 +18,16 @@ Future<void> setupMessaging(WidgetRef ref) async {
 
     _token = await FirebaseMessaging.instance.getToken(vapidKey: _vapidKey);
 
-    print(_token);
-
-    final countStateCtrl = ref.read(countProvider.notifier);
-    //final uidCountStateCtrl = ref.read(uidCountProvider.notifier);
+    final uidCountStateCtrl = ref.read(uidCountProvider.notifier);
 
     // when the message is received in foreground
     FirebaseMessaging.onMessage.listen(
       (event) {
-        print(event.data['visitCount']);
-        print(event.data['via']);
-        /*
-        Map<String, int> uidCount = uidCountStateCtrl.state;
-        uidCount[event.data['via']] = event.data['visitCount'];
-        uidCountStateCtrl.state = uidCount;
-        */
-        countStateCtrl.state = int.parse(event.data['visitCount']);
+        ErrorDispatcher.dispatch(
+            event.data['via'] + ' ' + event.data['visitCount']);
+        uidCountStateCtrl.state = <String, int>{
+          event.data['via']: int.parse(event.data['visitCount'])
+        };
       },
     );
   } catch (e) {

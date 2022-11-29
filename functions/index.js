@@ -23,15 +23,23 @@ exports.errDispatcher = functions.https.onCall(async (data, context) => {
 
 admin.initializeApp();
 exports.sendCount = functions.https.onCall(async (data, context) => {
-    if (context.auth === undefined || context.auth.uid === undefined)
+    if (context.auth === undefined || context.auth.uid === undefined) {
+        functions.logger.error('context.auth.[uid] is undefined');
         return false;
+    }
 
     try {
         const firestore = admin.firestore();
-        const docRef = await firestore.collection('users').doc(context.auth.uid).get();
+        const docRef = await firestore.collection('users').doc(context.auth.uid).get()
+            .catch((err) => {
+                functions.logger.error(err);
+            });
         var visitCount = docRef.get('visitCount');
         visitCount++;
-        await firestore.collection('users').doc(context.auth.uid).update({visitCount: visitCount});
+        await firestore.collection('users').doc(context.auth.uid).update({visitCount: visitCount})
+            .catch((err) => {
+                functions.logger.error(err);
+            });
         
         parsedData = JSON.parse(data);
         const token = parsedData.token;
@@ -47,7 +55,7 @@ exports.sendCount = functions.https.onCall(async (data, context) => {
                     return true;
                 })
                 .catch((err) => {
-                    functions.logger.log(err);
+                    functions.logger.error(err);
                     return false;
                 });
     } catch (e) {

@@ -2,15 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:test/dao.dart';
 
-/*
-final userProvider = FutureProvider.autoDispose(
-    (ref) async => await ref.read(userDAOProvider).fetchUser());
-final userProfileProvider = StateProvider.autoDispose((ref) {
-  final userRef = ref.watch(userProvider);
-  return userRef.maybeWhen(data: (data) => data, orElse: (() => null));
-});
-*/
-
 final userProfileProvider =
     FutureProvider.autoDispose((ref) => ref.read(userDAOProvider).fetchUser());
 

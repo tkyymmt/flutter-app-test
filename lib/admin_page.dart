@@ -13,8 +13,7 @@ class AdminPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final visitCount = ref.watch(countProvider);
-    //final uidCount = ref.watch(uidCountProvider);
+    final uidCount = ref.watch(uidCountProvider);
     final userProfs = ref.watch(userProfilesProvider);
 
     return Scaffold(
@@ -38,8 +37,9 @@ class AdminPage extends ConsumerWidget {
                       ElevatedButton(
                           onPressed: (() => print('PRESSED')),
                           child: const Text('Edit')),
-                      Text(userProf.visitCount.toString()),
-                      //Text(uidCount[userProf.uid].toString()),
+                      uidCount[userProf.uid] == null
+                          ? Text(userProf.visitCount.toString())
+                          : Text(uidCount[userProf.uid].toString()),
                     ],
                   ),
                 );
