@@ -1,14 +1,21 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:test/auth.dart';
+import 'package:test/user_profile.dart';
 import 'package:test/validator.dart';
 
-class LoginPage extends StatelessWidget {
+import 'error_dispatcher.dart';
+import 'messaging.dart';
+
+class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    setupMessaging(ref); //////////////////
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login Page'),
@@ -137,11 +144,21 @@ class _LoginButton extends ConsumerWidget {
         emailController.clear();
         passwordController.clear();
 
-        bool isMe = await isMeAdmin();
-        if (isMe) {
-          context.go('/admin');
-        } else {
-          context.go('/profile');
+        // must be called after the user logged in
+        sendCount(); //////////////////////
+
+        final auth = await ref.watch(userAuthProvider);
+        switch (auth) {
+          case Authority.admin:
+            context.go('/admin');
+            break;
+          case Authority.user:
+            context.go('/profile');
+            break;
+          default:
+            final String uid = FirebaseAuth.instance.currentUser!.uid;
+            ErrorDispatcher.dispatch('$uid does not have authority');
+            break;
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
