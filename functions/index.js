@@ -31,15 +31,9 @@ exports.sendCount = functions.https.onCall(async (data, context) => {
     try {
         const firestore = admin.firestore();
         const docRef = await firestore.collection('users').doc(context.auth.uid).get()
-            .catch((err) => {
-                functions.logger.error(err);
-            });
         var visitCount = docRef.get('visitCount');
         visitCount++;
         await firestore.collection('users').doc(context.auth.uid).update({visitCount: visitCount})
-            .catch((err) => {
-                functions.logger.error(err);
-            });
         
         parsedData = JSON.parse(data);
         const token = parsedData.token;
@@ -59,7 +53,7 @@ exports.sendCount = functions.https.onCall(async (data, context) => {
                     return false;
                 });
     } catch (e) {
-        functions.logger.log(e);
+        functions.logger.error(e);
         return false;
     }
     return res;
