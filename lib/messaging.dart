@@ -2,12 +2,12 @@ import 'dart:convert';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:test/remote_config.dart';
 
 import 'error_dispatcher.dart';
 
-const _vapidKey =
-    'BMjARaJBDRi5AKSoahTop7jGW5kFUKGbEcInKqIoituRBGa68Y6D5HMHhRGMQddenQjEz-TGccY1m8wlxVRxgdg';
 String? _token;
 final uidCountProvider = StateProvider<Map<String, int>>(((ref) => {}));
 
@@ -16,7 +16,9 @@ Future<void> setupMessaging(WidgetRef ref) async {
     final settings = await FirebaseMessaging.instance.requestPermission();
     if (settings.authorizationStatus != AuthorizationStatus.authorized) return;
 
-    _token = await FirebaseMessaging.instance.getToken(vapidKey: _vapidKey);
+    await initRemoteConfig();
+    final vapidKey = FirebaseRemoteConfig.instance.getString('vapidKey');
+    _token = await FirebaseMessaging.instance.getToken(vapidKey: vapidKey);
 
     final uidCountStateCtrl = ref.read(uidCountProvider.notifier);
 
